@@ -1,107 +1,33 @@
 "use strict";
 
-let clock = document.querySelector(".clock");
-let arrowH = document.createElement("div");
-let arrowM = document.createElement("div");
-let arrowS = document.createElement("div");
-let requestId = null;
+start();
 
-function createCircleSvg(r, cx, cy, color) {
-  let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-  circle.setAttribute("r", r);
-  circle.setAttribute("cx", cx);
-  circle.setAttribute("cy", cy);
-  circle.setAttribute("stroke", color);
-  circle.setAttribute("stroke-width", 10);
-  circle.setAttribute("fill", "transparent");
-  circle.style.transformOrigin = "center center";
-  circle.style.transform = "rotate(-90deg)";
-  document.querySelector(".time").append(circle);
-  return circle;
-}
-
-function createNumText(x, y, fontSize, bg) {
-  let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  text.setAttribute("x", x);
-  text.setAttribute("y", y);
-  text.setAttribute("font-size", fontSize);
-  text.setAttribute("fill", bg);
-  text.setAttribute("font-family", "Arial, Helvetica, sans-serif");
-  document.querySelector(".time").appendChild(text);
-  return text;
-}
-
-function createClockNum(radius) {
-  for (let i = 1; i <= 12; i++) {
-    let num = document.createElement("div");
-    clock.appendChild(num);
-    num.className = "num";
-    num.innerText = i;
-
-    let x = Math.cos(30 * i * (Math.PI / 180) - 1.57) * radius;
-    let y = Math.sin(30 * i * (Math.PI / 180) - 1.57) * radius;
-
-    num.style.left = `${x + clock.offsetWidth / 2 - num.offsetWidth / 2}px`;
-    num.style.top = `${y + clock.offsetWidth / 2 - num.offsetWidth / 2}px`;
-  }
-}
-
-function createArrow(arrow, classN, arrowOffset) {
-  clock.appendChild(arrow);
-  arrow.className = classN;
-  arrow.style.transformOrigin = `50% ${arrow.offsetHeight - arrowOffset}px`;
-  arrow.style.left = `${clock.offsetWidth / 2 - arrow.offsetWidth / 2}px`;
-  arrow.style.bottom = `${clock.offsetHeight / 2 - arrowOffset}px`;
-}
 
 function start() {
-  function formatTime(value, size) {
-    let strValue = value.toString();
-    while (strValue.length < size) strValue = "0" + strValue;
-    return strValue;
+  createClockFace(160);
+
+  let requestId = null;
+
+  const dateBlock = createNumText(250, 490, 35, null, "rgba(255, 255, 255, 0.6)");
+
+  const arrowH = createArrow(250, 260, 250, 150, 10, "black");
+  const arrowM = createArrow(250, 260, 250, 110, 6, "white");
+  const arrowS = createArrow(250, 260, 250, 85, 3, "red")
+
+  const hourCircle = createCircle(clock, 35, 150, 550, "transparent", "black", 10, -90, "150px 550px");
+  const minutCircle = createCircle(clock, 35, 250, 550, "transparent", "white", 10, -90, "250px 550px");
+  const secondCircle = createCircle(clock, 35, 350, 550, "transparent", "red", 10, -90, "350px 550px");
+
+  const hourText = createNumText(150, 560, 35, null, "rgba(255, 255, 255, 0.8)");
+  const minutText = createNumText(250, 560, 35, null, "rgba(255, 255, 255, 0.8)");
+  const secondText = createNumText(350, 560, 35, null, "rgba(255, 255, 255, 0.8)");
+
+  if (requestId) {
+    cancelAnimationFrame(requestId);
+    requestId = 0;
   }
 
-  function getNamekDay(date) {
-    let days = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    return days[date];
-  }
-
-  function getNameMonth(month) {
-    let months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-    return months[month];
-  }
-
-  function setProgress(percent, circle) {
-    const radius = circle.r.baseVal.value;
-    const circumference = 2 * Math.PI * radius;
-
-    circle.style.strokeDasharray = `${circumference} ${circumference}`;
-    circle.style.strokeDashoffset = circumference;
-
-    const offset = circumference - (percent / 100) * circumference;
-    circle.style.strokeDashoffset = offset;
-  }
+  requestId = requestAnimationFrame(showTime);
 
   function showTime() {
     let date = new Date();
@@ -113,50 +39,125 @@ function start() {
     let month = date.getMonth();
     let year = date.getFullYear();
 
-    hourText.innerHTML = formatTime(hours, 2);
-    minutText.innerHTML = formatTime(minutes, 2);
-    secondText.innerHTML = formatTime(seconds, 2);
-
-    setProgress((hours * 100) / 24, hourCircle);
-    setProgress((minutes * 100) / 60, minutCircle);
-    setProgress((seconds * 100) / 60, secondCircle);
-
-    dateBlock.innerHTML = `${getNamekDay(dayWeek)}, ${dayMonth} ${getNameMonth(
-      month
-    )} ${year}`;
+    dateBlock.textContent = `${getNamekDay(dayWeek)}, ${dayMonth} ${getNameMonth(month)} ${year}`;
 
     arrowS.style.transform = `rotate(${seconds * 6}deg)`;
     arrowM.style.transform = `rotate(${minutes * 6}deg)`;
     arrowH.style.transform = `rotate(${hours * 30 + minutes / 2}deg)`;
 
+    hourText.textContent = formatTime(hours, 2);
+    minutText.textContent = formatTime(minutes, 2);
+    secondText.textContent = formatTime(seconds, 2);
+
+    setProgress((hours * 100) / 24, hourCircle);
+    setProgress((minutes * 100) / 60, minutCircle);
+    setProgress((seconds * 100) / 60, secondCircle);
+
     requestId = requestAnimationFrame(showTime);
   }
-
-  let dateBlock = document.querySelector(".date");
-
-  let hourCircle = createCircleSvg(35, 160, -60, "black");
-  let minutCircle = createCircleSvg(35, 160, 40, "white");
-  let secondCircle = createCircleSvg(35, 160, 140, "red");
-
-  let hourText = createNumText(40, 52, 36, "white");
-  let minutText = createNumText(140, 52, 36, "white");
-  let secondText = createNumText(240, 52, 36, "white");
-
-  if (requestId) {
-    cancelAnimationFrame(requestId);
-    requestId = 0;
-  }
-
-  requestId = requestAnimationFrame(showTime);
 }
 
-createClockNum(130);
-createArrow(arrowH, "h_arrow", 20);
-createArrow(arrowM, "m_arrow", 20);
-createArrow(arrowS, "s_arrow", 20);
+function setProgress(percent, circle) {
+  const radius = circle.r.baseVal.value;
+  const circumference = 2 * Math.PI * radius;
 
-start();
+  circle.style.strokeDasharray = `${circumference} ${circumference}`;
+  circle.style.strokeDashoffset = circumference;
 
-console.log(
-  "Score: 30/30 \n 1) Механические часы с движущимися стрелками на JavaScript - 10 \n 2) Обязательный дополнительный функционал: электронные часы которые показывают точное время, название дня недели, дату, год - 10 \n 3) Дополнительный функционал на выбор: добавлены круговые диаграммы для часов, минут и секунд -  10"
-);
+  const offset = circumference - (percent / 100) * circumference;
+  circle.style.strokeDashoffset = offset;
+}
+
+function createClockFace(numRadius) {
+  let clock = document.querySelector("#clock");
+
+  createCircle(clock, 200, 250, 240, "rgba(255, 255, 255, 0.3)", "white", 15);
+
+  for (let i = 1; i <= 12; i++) {
+    let x = Math.cos(30 * i * (Math.PI / 180) - 1.57) * numRadius;
+    let y = Math.sin(30 * i * (Math.PI / 180) - 1.57) * numRadius;
+
+    x = x + clock.clientWidth / 2;
+    y = y + clock.clientHeight / 2;
+
+    createNumText(x, y - 49, 30, i, "black");
+  }
+}
+
+function createCircle(parent, r, cx, cy, bg, color, strokeSize, deg, trnOrigin) {
+  let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  circle.setAttribute("fill", bg);
+  circle.setAttribute("r", r);
+  circle.setAttribute("cx", cx);
+  circle.setAttribute("cy", cy);
+  circle.setAttribute("stroke", color);
+  circle.setAttribute("stroke-width", strokeSize);
+  circle.style.transformOrigin = trnOrigin;
+  circle.style.transform = `rotate(${deg}deg)`;
+  parent.appendChild(circle);
+  return circle;
+}
+
+function createNumText(x, y, fontSize, content, fill) {
+  let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  text.setAttribute("x", x);
+  text.setAttribute("y", y);
+  text.setAttribute("font-size", fontSize);
+  text.setAttribute("fill", fill);
+  text.setAttribute("font-family", "Arial, Helvetica, sans-serif");
+  text.setAttribute("text-anchor", "middle");
+  text.textContent = content;
+  clock.appendChild(text);
+  return text;
+}
+
+function createArrow(x1, y1, x2, y2, width, color) {
+  let arrow = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  arrow.setAttribute("x1", x1);
+  arrow.setAttribute("y1", y1);
+  arrow.setAttribute("x2", x2);
+  arrow.setAttribute("y2", y2);
+  arrow.setAttribute("stroke", color);
+  arrow.setAttribute("stroke-linecap", "round");
+  arrow.setAttribute("stroke-width", width);
+  arrow.style.transformOrigin = "center 240px";
+  clock.appendChild(arrow);
+  return arrow;
+}
+
+function getNamekDay(date) {
+  let days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  return days[date];
+}
+
+function getNameMonth(month) {
+  let months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  return months[month];
+}
+
+function formatTime(value, size) {
+  let strValue = value.toString();
+  while (strValue.length < size) strValue = "0" + strValue;
+  return strValue;
+}
