@@ -1,21 +1,5 @@
 "use strict";
 
-const app = document.querySelector('.app');
-
-window.addEventListener('resize', () => {
-  addScroll(500, 'scroll-x', window.innerWidth);
-  addScroll(600, 'scroll-y', window.innerHeight);
-});
-
-function addScroll(size, cl, winSize) {
-  if (winSize <= size) {
-    app.classList.add(cl);
-  } else {
-    app.classList.remove(cl);
-  }
-}
-
-// .............................
 
 start();
 
